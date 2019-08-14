@@ -10,9 +10,9 @@ class AccessTokenRequest extends HttpRequest
     {
         parent::__construct("/v1/oauth2/token", "POST");
         $this->headers["Authorization"] = "Basic " . $environment->authorizationString();
-        $body = [
+        $body = array(
             "grant_type" => "client_credentials"
-        ];
+        );
 
         if (!is_null($refreshToken))
         {
