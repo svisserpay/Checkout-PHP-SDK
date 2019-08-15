@@ -19,5 +19,15 @@ abstract class PayPalEnvironment implements Environment
     {
         return base64_encode($this->clientId . ":" . $this->clientSecret);
     }
+    
+    public function getClientId()
+    {
+        return $this->clientId;
+    }
+    
+    public function getClientSecret()
+    {
+        return $this->clientSecret;
+    }
 }
 

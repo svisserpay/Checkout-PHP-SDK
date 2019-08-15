@@ -3,6 +3,7 @@
 namespace PayPalCheckoutSdk\Core;
 
 use BraintreeHttp\HttpClient;
+use PayPalCheckoutSdk\Cache\AuthorizationCache;
 
 class PayPalHttpClient extends HttpClient
 {
@@ -22,6 +23,11 @@ class PayPalHttpClient extends HttpClient
     public function userAgent()
     {
         return UserAgent::getValue();
+    }
+    
+    public function setCachePath($strCachePath)
+    {
+        AuthorizationCache::setCachePath($strCachePath);
     }
 }
 
