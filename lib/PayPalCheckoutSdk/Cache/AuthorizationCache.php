@@ -6,8 +6,6 @@ use PayPalCheckoutSdk\Core\AccessTokenEncrypted;
 
 class AuthorizationCache
 {
-    public static $CACHE_PATH = '/../../../var/auth.cache';
-    
     private static $cachePath;
     
     /**
@@ -20,14 +18,16 @@ class AuthorizationCache
     public static function pull($key = null)
     {
         $tokens = null;
-        $cachePath = self::cachePath();
-        if (file_exists($cachePath)) {
-            $cache = file_get_contents($cachePath);
-            if($cache) {
+        if (self::$cachePath === null) {
+            return $tokens;
+        }
+        if (file_exists(self::$cachePath)) {
+            $cache = file_get_contents(self::$cachePath);
+            if ($cache) {
                 $tokens = @json_decode($cache);
             }
         }
-    
+        
         if ($key) {
             // If $key is supplied, return that data only
             return isset($tokens->{$key}) ? AccessTokenEncrypted::fromCacheData($tokens->{$key}) : null;
@@ -46,10 +46,13 @@ class AuthorizationCache
     public static function push($key, AccessTokenEncrypted $accessTokenEncrypted)
     {
         // make sure cache dir exists
-        $cachePath = self::cachePath();
-        if (!is_dir(dirname($cachePath))) {
-            if (mkdir(dirname($cachePath), 0755, true) == false) {
-                throw new \Exception("Failed to create directory at $cachePath");
+        if (self::$cachePath === null) {
+            return;
+        }
+        
+        if (!is_dir(dirname(self::$cachePath))) {
+            if (mkdir(dirname(self::$cachePath), 0755, true) == false) {
+                throw new \Exception("Failed to create directory at " . self::$cachePath);
             }
         }
         
@@ -59,23 +62,9 @@ class AuthorizationCache
             $tokens->{$key} = $accessTokenEncrypted->toCacheData();
         }
         
-        if (!file_put_contents($cachePath, json_encode($tokens))) {
+        if (!file_put_contents(self::$cachePath, json_encode($tokens))) {
             throw new \Exception("Failed to write cache");
         };
-    }
-    
-    /**
-     * Returns the cache file path
-     *
-     * @return string
-     */
-    public static function cachePath()
-    {
-        if(self::$cachePath === null) {
-            return self::$cachePath = __DIR__ . self::$CACHE_PATH;
-        }
-    
-        return self::$cachePath;
     }
     
     /**
