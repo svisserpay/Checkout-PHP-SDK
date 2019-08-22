@@ -8,8 +8,8 @@
     "require": {
         "paynl/braintreehttp": "dev-pay-additions",
         "php": ">=5.3.3",
-        "ext-json": "^1.7",
-        "ext-openssl": "^7.3"
+        "ext-json": "*",
+        "ext-openssl": "*"
     },
     "authors": [
         {
