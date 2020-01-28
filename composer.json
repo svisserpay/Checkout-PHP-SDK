@@ -42,7 +42,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:svisserpay/braintreehttp_php.git"
+            "url": "git@github.com:paynl/braintreehttp_php.git"
         }
     ]
 }
