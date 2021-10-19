@@ -71,19 +71,7 @@ class AuthorizationInjector implements Injector
         }
         
         // refresh token
-        $response = $this->client->execute(new AccessTokenRequest($this->environment, $this->refreshToken));
-        $accessTokenEncrypted = new AccessTokenEncrypted(
-            $this->encrypt($response->result->access_token),
-            $response->result->token_type,
-            $response->result->expires_in
-        );
-        AuthorizationCache::push($this->environment->getClientId(), $accessTokenEncrypted);
-        
-        return $this->accessToken = new AccessToken(
-            $response->result->access_token,
-            $response->result->token_type,
-            $response->result->expires_in
-        );
+        return $this->refreshAccessToken();
     }
     
     /**
@@ -134,5 +122,27 @@ class AuthorizationInjector implements Injector
         $iv = substr($input, 0, self::IV_SIZE);
         // Return Decrypted Data
         return openssl_decrypt(substr($input, self::IV_SIZE), "AES-256-CBC", $this->environment->getClientSecret(), 0, $iv);
+    }
+    
+    /**
+     * @return AccessToken
+     * @throws \BraintreeHttp\HttpException
+     * @throws \BraintreeHttp\IOException
+     */
+    public function refreshAccessToken()
+    {
+        $response = $this->client->execute(new AccessTokenRequest($this->environment, $this->refreshToken));
+        $accessTokenEncrypted = new AccessTokenEncrypted(
+            $this->encrypt($response->result->access_token),
+            $response->result->token_type,
+            $response->result->expires_in
+        );
+        AuthorizationCache::push($this->environment->getClientId(), $accessTokenEncrypted);
+        
+        return $this->accessToken = new AccessToken(
+            $response->result->access_token,
+            $response->result->token_type,
+            $response->result->expires_in
+        );
     }
 }
