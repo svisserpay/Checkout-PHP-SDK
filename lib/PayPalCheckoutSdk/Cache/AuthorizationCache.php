@@ -57,7 +57,7 @@ class AuthorizationCache
         }
         
         // Reads all the existing persisted data
-        $tokens = self::pull() ?: array();
+        $tokens = self::pull() ?: (object)array();
         if (is_object($tokens)) {
             $tokens->{$key} = $accessTokenEncrypted->toCacheData();
         }
