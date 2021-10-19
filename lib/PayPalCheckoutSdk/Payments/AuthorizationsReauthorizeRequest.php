@@ -9,7 +9,7 @@
 
 namespace PayPalCheckoutSdk\Payments;
 
-use PayPalHttp\HttpRequest;
+use BraintreeHttp\HttpRequest;
 
 class AuthorizationsReauthorizeRequest extends HttpRequest
 {
