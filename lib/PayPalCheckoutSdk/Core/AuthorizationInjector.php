@@ -2,10 +2,10 @@
 
 namespace PayPalCheckoutSdk\Core;
 
+use BraintreeHttp\HttpClient;
 use BraintreeHttp\HttpRequest;
 use BraintreeHttp\Injector;
-use BraintreeHttp\HttpClient;
-use PayPalCheckoutSdk\Cache\AuthorizationCache;
+use PayPalCheckoutSdk\Cache\StorageInterface;
 
 class AuthorizationInjector implements Injector
 {
@@ -19,7 +19,10 @@ class AuthorizationInjector implements Injector
     private $refreshToken;
     
     /** @var AccessToken */
-    public $accessToken;
+    public $accessToken = null;
+    
+    /** @var StorageInterface $storage */
+    private $tokenStorage;
     
     /** Fixed IV Size */
     const IV_SIZE = 16;
@@ -30,11 +33,11 @@ class AuthorizationInjector implements Injector
      * @param PayPalEnvironment $environment
      * @param string $refreshToken
      */
-    public function __construct(HttpClient $client, PayPalEnvironment $environment, $refreshToken)
+    public function __construct(HttpClient $client, PayPalEnvironment $environment, StorageInterface $storage)
     {
         $this->client = $client;
         $this->environment = $environment;
-        $this->refreshToken = $refreshToken;
+        $this->tokenStorage = $storage;
     }
     
     /**
@@ -55,19 +58,14 @@ class AuthorizationInjector implements Injector
     private function fetchAccessToken()
     {
         // Check if we already have accessToken in Cache
-        if ($this->accessToken && !$this->accessToken->isExpired()) {
+        if ($this->accessToken) {
             return $this->accessToken;
         }
         
         // grab token from cache
-        $accessTokenEncrypted = AuthorizationCache::pull($this->environment->getClientId());
-        if ($accessTokenEncrypted && !$accessTokenEncrypted->isExpired()) {
-            return $this->accessToken = new AccessToken(
-                $this->decrypt($accessTokenEncrypted->accessToken),
-                $accessTokenEncrypted->tokenType,
-                $accessTokenEncrypted->expiresIn,
-                $accessTokenEncrypted->createDate
-            );
+        $accessToken = $this->tokenStorage->pull();
+        if ($accessToken) {
+            return $this->accessToken = new AccessToken($accessToken);
         }
         
         // refresh token
@@ -131,18 +129,10 @@ class AuthorizationInjector implements Injector
      */
     public function refreshAccessToken()
     {
-        $response = $this->client->execute(new AccessTokenRequest($this->environment, $this->refreshToken));
-        $accessTokenEncrypted = new AccessTokenEncrypted(
-            $this->encrypt($response->result->access_token),
-            $response->result->token_type,
-            $response->result->expires_in
-        );
-        AuthorizationCache::push($this->environment->getClientId(), $accessTokenEncrypted);
+        $response = $this->client->execute(new AccessTokenRequest($this->environment));
         
-        return $this->accessToken = new AccessToken(
-            $response->result->access_token,
-            $response->result->token_type,
-            $response->result->expires_in
-        );
+        $this->tokenStorage->push($response->result->access_token, $response->result->expires_in);
+        
+        return $this->accessToken = new AccessToken($response->result->access_token);
     }
 }
