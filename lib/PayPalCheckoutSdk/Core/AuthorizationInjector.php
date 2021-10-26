@@ -63,7 +63,7 @@ class AuthorizationInjector implements Injector
         }
         
         // grab token from cache
-        $accessToken = $this->tokenStorage->pull();
+        $accessToken = $this->tokenStorage->pull($this->getTokenKey());
         if ($accessToken) {
             return $this->accessToken = new AccessToken($accessToken);
         }
@@ -131,8 +131,16 @@ class AuthorizationInjector implements Injector
     {
         $response = $this->client->execute(new AccessTokenRequest($this->environment));
         
-        $this->tokenStorage->push($response->result->access_token, $response->result->expires_in);
+        $this->tokenStorage->push($this->getTokenKey(), $response->result->access_token, $response->result->expires_in);
         
         return $this->accessToken = new AccessToken($response->result->access_token);
+    }
+    
+    /**
+     * @return string
+     */
+    private function getTokenKey()
+    {
+        return $this->environment instanceof SandboxEnvironment ? 'TEST' : 'LIVE';
     }
 }
