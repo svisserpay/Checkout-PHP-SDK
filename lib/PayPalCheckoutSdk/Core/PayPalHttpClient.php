@@ -3,14 +3,13 @@
 namespace PayPalCheckoutSdk\Core;
 
 use BraintreeHttp\HttpClient;
-use PayPalCheckoutSdk\Cache\AuthorizationCache;
 use PayPalCheckoutSdk\Cache\StorageInterface;
 
 class PayPalHttpClient extends HttpClient
 {
     public $authInjector;
 
-    public function __construct(PayPalEnvironment $environment, StorageInterface $storage)
+    public function __construct(PayPalEnvironment $environment, StorageInterface $storage, $payerId, $bnCode)
     {
         parent::__construct($environment);
         
@@ -18,6 +17,8 @@ class PayPalHttpClient extends HttpClient
         $this->addInjector($this->authInjector);
         $this->addInjector(new GzipInjector());
         $this->addInjector(new FPTIInstrumentationInjector());
+        $this->addInjector(new AuthAssertionInjector($environment, $payerId));
+        $this->addInjector(new PartnerAttributionInjector($bnCode));
     }
 
     public function userAgent()
