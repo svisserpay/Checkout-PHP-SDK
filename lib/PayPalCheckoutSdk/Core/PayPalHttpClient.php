@@ -9,7 +9,7 @@ class PayPalHttpClient extends HttpClient
 {
     public $authInjector;
 
-    public function __construct(PayPalEnvironment $environment, StorageInterface $storage, $payerId, $bnCode)
+    public function __construct(PayPalEnvironment $environment, StorageInterface $storage, $bnCode = '')
     {
         parent::__construct($environment);
         
@@ -17,8 +17,10 @@ class PayPalHttpClient extends HttpClient
         $this->addInjector($this->authInjector);
         $this->addInjector(new GzipInjector());
         $this->addInjector(new FPTIInstrumentationInjector());
-        $this->addInjector(new AuthAssertionInjector($environment, $payerId));
-        $this->addInjector(new PartnerAttributionInjector($bnCode));
+        
+        if (!empty($bnCode)) {
+            $this->addInjector(new PartnerAttributionInjector($bnCode));
+        }       
     }
 
     public function userAgent()
